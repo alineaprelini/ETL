@@ -1,0 +1,58 @@
+-- -- Crie uma tabela para armazenar os dados do aluguel de carros
+CREATE TABLE car_rental_data (
+    fuelType VARCHAR(20),
+    rating DECIMAL(3,2),
+    renterTripsTaken INTEGER,
+    reviewCount INTEGER,
+    location_city VARCHAR(50),
+    location_country VARCHAR(50),
+    location_latitude DECIMAL(10,6),
+    location_longitude DECIMAL(10,6),
+    location_state VARCHAR(2),
+    owner_id INTEGER,
+    rate_daily DECIMAL(10,2),
+    vehicle_make VARCHAR(50),
+    vehicle_model VARCHAR(50),
+    vehicle_type VARCHAR(20),
+    vehicle_year INTEGER
+);
+
+--  Carregue os dados do arquivo CSV na tabela
+COPY car_rental_data (
+    fuelType,
+    rating,
+    renterTripsTaken,
+    reviewCount,
+    location_city,
+    location_country,
+    location_latitude,
+    location_longitude,
+    location_state,
+    owner_id,
+    rate_daily,
+    vehicle_make,
+    vehicle_model,
+    vehicle_type,
+    vehicle_year
+)
+FROM 'CarRentalData.csv'
+DELIMITER ','
+CSV HEADER;
+
+-- Execute todas as transformações de dados necessárias
+
+UPDATE car_rental_data
+SET renterTripsTaken = CASE WHEN renterTripsTaken = '' THEN NULL ELSE CAST(renterTripsTaken AS INTEGER) END,
+    reviewCount = CASE WHEN reviewCount = '' THEN NULL ELSE CAST(reviewCount AS INTEGER) END,
+    rate_daily = CASE WHEN rate_daily = '' THEN NULL ELSE CAST(rate_daily AS DECIMAL(10,2)) END;
+
+-- Execute todas as verificações de qualidade de dados necessárias
+SELECT COUNT(*) AS total_rows, 
+       SUM(CASE WHEN renterTripsTaken IS NULL THEN 1 ELSE 0 END) AS null_renterTripsTaken,
+       SUM(CASE WHEN reviewCount IS NULL THEN 1 ELSE 0 END) AS null_reviewCount,
+       SUM(CASE WHEN rate_daily IS NULL THEN 1 ELSE 0 END) AS null_rate_daily
+FROM car_rental_data;
+
+-- Carregue os dados transformados na tabela de destino final
+CREATE TABLE final_car_rental_data AS
+SELECT * FROM car_rental_data;
